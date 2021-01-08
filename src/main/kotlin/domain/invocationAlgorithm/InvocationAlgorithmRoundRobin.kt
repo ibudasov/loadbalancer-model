@@ -8,7 +8,21 @@ import domain.ProviderRegistry
  * invocation of the get() method of the registered providers.
  */
 class InvocationAlgorithmRoundRobin : InvocationAlgorithm {
+
+    var previousCallReturnedElementAt = 0
+
     override fun getProviderFromProviderRegistry(providerRegistry: ProviderRegistry): Provider {
-        TODO("Not yet implemented")
+
+        if (previousCallReturnedElementAt == providerRegistry.size) {
+            previousCallReturnedElementAt = 0
+        }
+
+        var providerToReturn = providerRegistry
+            .toList()
+            .get(previousCallReturnedElementAt)
+
+        previousCallReturnedElementAt++
+
+        return providerToReturn
     }
 }
