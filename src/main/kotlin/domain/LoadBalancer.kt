@@ -2,9 +2,7 @@ package domain
 
 import domain.invocationAlgorithm.InvocationAlgorithmRandom
 
-class LoadBalancer {
-
-    private val registry = ProviderRegistry()
+class LoadBalancer(private val registry: ProviderRegistry = ProviderRegistry()) {
 
     /**
      * the maximum number of providers accepted from the load balancer is 10
@@ -28,8 +26,11 @@ class LoadBalancer {
     }
 
     fun excludeProviderFromBalancer(providerIdentifier: ProviderIdentifier) {
-        // todo: pop it out or regystry
-        // todo: add it to the dead regystry
+        registry.removeAll {
+            it.get().toString() == providerIdentifier.toString()
+        }
+
+        // todo: add it to the dead registry
     }
 
     /**

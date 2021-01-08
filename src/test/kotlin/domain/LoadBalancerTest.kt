@@ -2,6 +2,7 @@ package domain
 
 import application.ProviderExample
 import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class LoadBalancerTest {
@@ -29,4 +30,24 @@ class LoadBalancerTest {
             balancer.includeProviderIntoBalancer(provider)
         }
     }
+
+    @Test
+    fun `provider can be excluded out of registry`() {
+
+        val registry = ProviderRegistry()
+        val balancer = LoadBalancer(registry)
+
+        for (i in 1..5) {
+            val `provider$i` = ProviderExample()
+            `provider$i`.setProviderIdentifier("provider$i")
+            balancer.includeProviderIntoBalancer(`provider$i`)
+        }
+
+        assertEquals(5, registry.size, "Right after we added 5 providers, their count should be 5")
+
+        balancer.excludeProviderFromBalancer(ProviderIdentifier("provider3"))
+
+        assertEquals(4, registry.size, "We just removed a provider, count of providers should change")
+    }
+
 }
