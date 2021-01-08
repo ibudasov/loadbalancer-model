@@ -1,5 +1,6 @@
 package domain
 
+import application.ProviderExample
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

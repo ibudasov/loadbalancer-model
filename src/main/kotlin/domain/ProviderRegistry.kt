@@ -1,7 +1,5 @@
 package domain
 
-class ProviderRegistry {
-    fun registerProvider(provider: Provider) {}
+import java.util.*
 
-
-}
+class ProviderRegistry : Stack<Provider>()

@@ -1,24 +1,31 @@
 package domain
 
-class LoadBalancer {
-
-    fun get() {
-        // todo: algorithm instance
-        // todo:
-        // todo:
-        // todo:
-        // todo:
-    }
-
-    fun includeProviderIntoBalancer(provider: Provider) {}
-
-    fun excludeProviderFromBalancer(providerIdentifier: ProviderIdentifier) {}
+class LoadBalancer(private val registry: ProviderRegistry) {
 
     /**
      * the maximum number of providers accepted from the load balancer is 10
      */
-    fun maxSupportedNumberOfProviders(): Int {
-        return 10;
+    private val maximumNumberOfProvidersAcceptedFromTheLoadBalancer = 10
+
+    fun get() {
+        // todo: check if it's possible to accept one more request
+        // todo: algorithm instance
+        // todo: get a provider out of registry according to the algorithm
+        // todo:
+        // todo:
+    }
+
+    fun includeProviderIntoBalancer(provider: Provider) {
+        if (registry.size == maximumNumberOfProvidersAcceptedFromTheLoadBalancer) {
+            throw SorryCannotAddProviderBecauseOfMaxLimit()
+        }
+
+        registry.push(provider)
+    }
+
+    fun excludeProviderFromBalancer(providerIdentifier: ProviderIdentifier) {
+        // todo: pop it out or regystry
+        // todo: add it to the dead regystry
     }
 
     /**
@@ -27,5 +34,11 @@ class LoadBalancer {
      *
      * this method might be called b y something like cron in a recurring manner
      */
-    fun healthCheck() {}
+    fun healthCheck() {
+        // todo: check every provider
+        // todo: once it's dead - add it to ther dead regystry
+        // todo:
+        // todo: chhechhk every dead provider
+        // todo: once alive - add back to the alive register
+    }
 }

@@ -1,10 +1,13 @@
-package domain
+package application
 
+import domain.Provider
+import domain.ProviderIdentifier
+import java.util.*
 import kotlin.random.Random
 
 class ProviderExample : Provider {
     override fun get(): ProviderIdentifier {
-        return ProviderIdentifier(java.util.UUID.randomUUID().toString())
+        return ProviderIdentifier(UUID.randomUUID().toString())
     }
 
     override fun check(): Boolean {
