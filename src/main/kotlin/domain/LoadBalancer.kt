@@ -1,6 +1,8 @@
 package domain
 
-class LoadBalancer(private val registry: ProviderRegistry) {
+class LoadBalancer {
+
+    private val registry = ProviderRegistry()
 
     /**
      * the maximum number of providers accepted from the load balancer is 10

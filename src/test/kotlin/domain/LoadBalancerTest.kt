@@ -9,8 +9,7 @@ class LoadBalancerTest {
     @Test
     fun `provider can be included into the balancer when there is enough space for it`() {
 
-        val registry = ProviderRegistry()
-        val balancer = LoadBalancer(registry)
+        val balancer = LoadBalancer()
         val provider = ProviderExample()
 
         balancer.includeProviderIntoBalancer(provider)
@@ -19,8 +18,7 @@ class LoadBalancerTest {
     @Test
     fun `provider can NOT be included into the balancer when there is enough providers already`() {
 
-        val registry = ProviderRegistry()
-        val balancer = LoadBalancer(registry)
+        val balancer = LoadBalancer()
         val provider = ProviderExample()
 
         for (i in 1..10) {
