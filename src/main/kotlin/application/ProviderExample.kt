@@ -2,12 +2,18 @@ package application
 
 import domain.Provider
 import domain.ProviderIdentifier
-import java.util.*
 import kotlin.random.Random
 
 class ProviderExample : Provider {
+
+    var manuallyAssignedProviderIdentifier: String = ""
+
+    fun setProviderIdentifier(id: String) {
+        manuallyAssignedProviderIdentifier = id
+    }
+
     override fun get(): ProviderIdentifier {
-        return ProviderIdentifier(UUID.randomUUID().toString())
+        return ProviderIdentifier(manuallyAssignedProviderIdentifier)
     }
 
     override fun check(): Boolean {

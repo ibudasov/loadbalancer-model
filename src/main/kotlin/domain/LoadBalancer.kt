@@ -1,5 +1,7 @@
 package domain
 
+import domain.invocationAlgorithm.InvocationAlgorithmRandom
+
 class LoadBalancer {
 
     private val registry = ProviderRegistry()
@@ -9,12 +11,12 @@ class LoadBalancer {
      */
     private val maximumNumberOfProvidersAcceptedFromTheLoadBalancer = 10
 
-    fun get() {
+    fun get(): Provider {
         // todo: check if it's possible to accept one more request
-        // todo: algorithm instance
-        // todo: get a provider out of registry according to the algorithm
-        // todo:
-        // todo:
+
+        val algorithm = InvocationAlgorithmRandom()
+
+        return registry.getProviderAccordingToTheAlgorithm(algorithm)
     }
 
     fun includeProviderIntoBalancer(provider: Provider) {
