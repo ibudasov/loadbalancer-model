@@ -3,7 +3,7 @@ package application
 import domain.Provider
 import domain.ProviderIdentifier
 
-class ProviderExample : Provider {
+class ProviderExampleWhichIsAlwaysDead : Provider {
 
     var manuallyAssignedProviderIdentifier: String = ""
 
@@ -16,7 +16,7 @@ class ProviderExample : Provider {
     }
 
     override fun check(): Boolean {
-        return true
+        return false
     }
 
     override fun howManyParallelRequestsCanThisProviderProcess(): Int {

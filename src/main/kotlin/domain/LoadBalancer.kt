@@ -2,7 +2,10 @@ package domain
 
 import domain.invocationAlgorithm.InvocationAlgorithmRandom
 
-class LoadBalancer(private val registry: ProviderRegistry = ProviderRegistry()) {
+class LoadBalancer(
+    private val registry: ProviderRegistry = ProviderRegistry(),
+    private val deadRegistry: ProviderRegistryOfExcludedProviders = ProviderRegistryOfExcludedProviders(),
+) {
 
     /**
      * the maximum number of providers accepted from the load balancer is 10
@@ -38,9 +41,11 @@ class LoadBalancer(private val registry: ProviderRegistry = ProviderRegistry()) 
      * this method might be called b y something like cron in a recurring manner
      */
     fun healthCheck() {
-        // todo: check every provider
-        // todo: once it's dead - add it to ther dead regystry
-        // todo:
+        registry.removeAll {
+            it.check() == false
+        }
+
+
         // todo: chhechhk every dead provider
         // todo: once alive - add back to the alive register
     }

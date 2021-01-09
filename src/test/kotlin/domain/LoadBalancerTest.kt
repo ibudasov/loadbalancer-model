@@ -1,6 +1,7 @@
 package domain
 
 import application.ProviderExample
+import application.ProviderExampleWhichIsAlwaysDead
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -32,7 +33,7 @@ class LoadBalancerTest {
     }
 
     @Test
-    fun `provider can be excluded out of registry`() {
+    fun `provider can be excluded out of registry manually`() {
 
         val registry = ProviderRegistry()
         val balancer = LoadBalancer(registry)
@@ -49,5 +50,29 @@ class LoadBalancerTest {
 
         assertEquals(4, registry.size, "We just removed a provider, count of providers should change")
     }
+
+    @Test
+    fun `provider is excluded out of registry if it's not healthy`() {
+
+        val registry = ProviderRegistry()
+        val deadRegistry = ProviderRegistryOfExcludedProviders()
+        val balancer = LoadBalancer(registry, deadRegistry)
+
+        val healthyProvider = ProviderExample()
+        healthyProvider.setProviderIdentifier("healthy-provider")
+        balancer.includeProviderIntoBalancer(healthyProvider)
+
+        val deadProvider = ProviderExampleWhichIsAlwaysDead()
+        deadProvider.setProviderIdentifier("dead-provider")
+        balancer.includeProviderIntoBalancer(deadProvider)
+
+        assertEquals(2, registry.size, "Initially the loadBalancer should have 2 providers")
+
+        balancer.healthCheck()
+
+        assertEquals(1, registry.size, "After running the health check, the dead provider should be gone")
+        assertEquals("healthy-provider", balancer.get().get().toString())
+    }
+
 
 }
