@@ -1,7 +1,5 @@
 package domain
 
-class ProviderRegistryOfExcludedProviders {
-    fun registerProvider(provider: Provider) {}
+import java.util.*
 
-    fun unregisterProviderAsUnhealthy() {}
-}
+class ProviderRegistryOfExcludedProviders : Stack<Provider>()
