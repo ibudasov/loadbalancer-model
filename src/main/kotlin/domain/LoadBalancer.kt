@@ -29,8 +29,6 @@ class LoadBalancer(private val registry: ProviderRegistry = ProviderRegistry()) 
         registry.removeAll {
             it.get().toString() == providerIdentifier.toString()
         }
-
-        // todo: add it to the dead registry
     }
 
     /**
