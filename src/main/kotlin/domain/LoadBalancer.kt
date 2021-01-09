@@ -12,12 +12,46 @@ class LoadBalancer(
      */
     private val maximumNumberOfProvidersAcceptedFromTheLoadBalancer = 10
 
+    private var clusterCapacityLimit = 0
+
+    private var numberOfCurrentlyRunningRequests = 0
+
     fun get(): Provider {
-        // todo: check if it's possible to accept one more request
 
-        val algorithm = InvocationAlgorithmRandom()
+        guardAgainstOverflowingClusterCapacityLimit()
 
-        return registry.getProviderAccordingToTheAlgorithm(algorithm)
+        val provider = registry.getProviderAccordingToTheAlgorithm(
+            InvocationAlgorithmRandom()
+        )
+
+        // unregisterIncomingRequestAsItIsProcessed()
+
+        return provider
+    }
+
+    private fun guardAgainstOverflowingClusterCapacityLimit() {
+
+        updateClusterCapacityLimit()
+        registerIncomingRequest()
+
+        if (numberOfCurrentlyRunningRequests > clusterCapacityLimit) {
+            throw SorryCannotAcceptRequestDueToClusterCapacityLimit()
+        }
+    }
+
+    private fun updateClusterCapacityLimit() {
+        clusterCapacityLimit = 0
+        registry.forEach {
+            clusterCapacityLimit += it.howManyParallelRequestsCanThisProviderProcess()
+        }
+    }
+
+    private fun unregisterIncomingRequestAsItIsProcessed() {
+        numberOfCurrentlyRunningRequests--
+    }
+
+    private fun registerIncomingRequest() {
+        numberOfCurrentlyRunningRequests++
     }
 
     fun includeProviderIntoBalancer(provider: Provider) {

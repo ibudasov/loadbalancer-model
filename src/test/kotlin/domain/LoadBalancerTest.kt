@@ -74,5 +74,24 @@ class LoadBalancerTest {
         assertEquals("healthy-provider", balancer.get().get().toString())
     }
 
+    @Test
+    fun `loadBalancer does not accept more requests than it can process`() {
+        val registry = ProviderRegistry()
+        val balancer = LoadBalancer(registry)
+
+        // let's make cluster capacity = 2
+        for (i in 1..2) {
+            val `provider$i` = ProviderExample()
+            `provider$i`.setProviderIdentifier("provider$i")
+            balancer.includeProviderIntoBalancer(`provider$i`)
+        }
+
+        balancer.get()
+        balancer.get()
+        assertFailsWith<SorryCannotAcceptRequestDueToClusterCapacityLimit> {
+            balancer.get()
+        }
+    }
+
 
 }
