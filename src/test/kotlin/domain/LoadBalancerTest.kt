@@ -52,7 +52,7 @@ class LoadBalancerTest {
     }
 
     @Test
-    fun `provider is excluded out of registry if it's not healthy`() {
+    fun `provider is excluded out of registry if it's not healthy and goes to deadRegistry`() {
 
         val registry = ProviderRegistry()
         val deadRegistry = ProviderRegistryOfExcludedProviders()
@@ -72,6 +72,8 @@ class LoadBalancerTest {
 
         assertEquals(1, registry.size, "After running the health check, the dead provider should be gone")
         assertEquals("healthy-provider", balancer.get().get().toString())
+        assertEquals(1, deadRegistry.size)
+        assertEquals("dead-provider", deadRegistry.first().get().uniqueString)
     }
 
     @Test

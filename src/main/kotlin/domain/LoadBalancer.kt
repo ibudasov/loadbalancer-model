@@ -24,6 +24,7 @@ class LoadBalancer(
             InvocationAlgorithmRandom()
         )
 
+        // todo: get rid of this
         // unregisterIncomingRequestAsItIsProcessed()
 
         return provider
@@ -75,12 +76,16 @@ class LoadBalancer(
      * this method might be called b y something like cron in a recurring manner
      */
     fun healthCheck() {
-        registry.removeAll {
-            it.check() == false
+        val (healthyProviders, deadProviders) = registry.partition {
+            it.check()
         }
 
+        registry.removeAll { !it.check() }
 
-        // todo: chhechhk every dead provider
+        deadProviders.forEach {
+            deadRegistry.push(it)
+        }
+
         // todo: once alive - add back to the alive register
     }
 }
