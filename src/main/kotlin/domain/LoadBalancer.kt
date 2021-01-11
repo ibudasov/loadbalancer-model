@@ -1,18 +1,17 @@
 package domain
 
 import domain.invocationAlgorithm.InvocationAlgorithmRandom
-import java.util.*
 
 class LoadBalancer(
     private val registry: ProviderRegistry = ProviderRegistry(),
     private val quarantine: ProviderQuarantine = ProviderQuarantine(),
+    private val healthChecker: HealthChecker = HealthChecker()
 ) {
     /**
      * the maximum number of providers accepted from the load balancer is 10
      */
     private val maximumNumberOfProvidersAcceptedFromTheLoadBalancer = 10
 
-    private val candidatesToBeHealthy = Stack<Provider>()
 
     private var clusterCapacityLimit = 0
 
@@ -78,44 +77,8 @@ class LoadBalancer(
      * this method might be called b y something like cron in a recurring manner
      */
     fun healthCheck() {
-
-        addUnhealthyProvidersToQuarantineSoTheyCanRecoverThere()
-
-        removeUnhealthyProvidersFromTheLoadbalancer()
-
-        checkQuarantineAndRecoverProvidersIfTheyReportHealthy()
+        healthChecker.check(registry, quarantine)
     }
 
-    private fun checkQuarantineAndRecoverProvidersIfTheyReportHealthy() {
-        val toBeDeletedFromDeadRegistry = Stack<Provider>()
 
-        quarantine.forEach {
-
-            if (it.check()) {
-
-                // the candidate is already there in the list, means this is the second check for it
-                if (candidatesToBeHealthy.search(it) != -1) {
-                    registry.push(it)
-                    toBeDeletedFromDeadRegistry.push(it)
-                }
-
-                // adding the candidate to the quarantine for the first time
-                candidatesToBeHealthy.push(it)
-            }
-        }
-
-        toBeDeletedFromDeadRegistry.forEach {
-            quarantine.remove(it)
-        }
-    }
-
-    private fun addUnhealthyProvidersToQuarantineSoTheyCanRecoverThere() {
-        registry.forEach {
-            if (!it.check()) quarantine.push(it)
-        }
-    }
-
-    private fun removeUnhealthyProvidersFromTheLoadbalancer() {
-        registry.removeAll { !it.check() }
-    }
 }
