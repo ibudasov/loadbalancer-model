@@ -4,7 +4,7 @@ import domain.invocationAlgorithm.InvocationAlgorithmRandom
 import java.util.*
 
 class LoadBalancer(
-    private val registryHealthy: ProviderRegistry = ProviderRegistry(),
+    private val registry: ProviderRegistry = ProviderRegistry(),
     private val quarantine: ProviderQuarantine = ProviderQuarantine(),
 ) {
     /**
@@ -22,7 +22,7 @@ class LoadBalancer(
 
         guardAgainstOverflowingClusterCapacityLimit()
 
-        val provider = registryHealthy.getProviderAccordingToTheAlgorithm(
+        val provider = registry.getProviderAccordingToTheAlgorithm(
             InvocationAlgorithmRandom()
         )
 
@@ -44,7 +44,7 @@ class LoadBalancer(
 
     private fun updateClusterCapacityLimit() {
         clusterCapacityLimit = 0
-        registryHealthy.forEach {
+        registry.forEach {
             clusterCapacityLimit += it.howManyParallelRequestsCanThisProviderProcess()
         }
     }
@@ -58,15 +58,15 @@ class LoadBalancer(
     }
 
     fun includeProviderIntoBalancer(provider: Provider) {
-        if (registryHealthy.size == maximumNumberOfProvidersAcceptedFromTheLoadBalancer) {
+        if (registry.size == maximumNumberOfProvidersAcceptedFromTheLoadBalancer) {
             throw SorryCannotAddProviderBecauseOfMaxLimit()
         }
 
-        registryHealthy.push(provider)
+        registry.push(provider)
     }
 
     fun excludeProviderFromBalancer(providerIdentifier: ProviderIdentifier) {
-        registryHealthy.removeAll {
+        registry.removeAll {
             it.get().toString() == providerIdentifier.toString()
         }
     }
@@ -95,7 +95,7 @@ class LoadBalancer(
 
                 // the candidate is already there in the list, means this is the second check for it
                 if (candidatesToBeHealthy.search(it) != -1) {
-                    registryHealthy.push(it)
+                    registry.push(it)
                     toBeDeletedFromDeadRegistry.push(it)
                 }
 
@@ -110,12 +110,12 @@ class LoadBalancer(
     }
 
     private fun addUnhealthyProvidersToQuarantineSoTheyCanRecoverThere() {
-        registryHealthy.forEach {
+        registry.forEach {
             if (!it.check()) quarantine.push(it)
         }
     }
 
     private fun removeUnhealthyProvidersFromTheLoadbalancer() {
-        registryHealthy.removeAll { !it.check() }
+        registry.removeAll { !it.check() }
     }
 }
