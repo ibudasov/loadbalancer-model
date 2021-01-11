@@ -4,8 +4,8 @@ import domain.invocationAlgorithm.InvocationAlgorithmRandom
 import java.util.*
 
 class LoadBalancer(
-    private val registry: ProviderRegistry = ProviderRegistry(),
-    private val deadRegistry: ProviderRegistryOfExcludedProviders = ProviderRegistryOfExcludedProviders(),
+    private val registryHealthy: ProviderRegistryHealthy = ProviderRegistryHealthy(),
+    private val quarantine: ProviderRegistryQuarantine = ProviderRegistryQuarantine(),
 ) {
 
     private val candidatesToBeHealthy = Stack<Provider>()
@@ -23,7 +23,7 @@ class LoadBalancer(
 
         guardAgainstOverflowingClusterCapacityLimit()
 
-        val provider = registry.getProviderAccordingToTheAlgorithm(
+        val provider = registryHealthy.getProviderAccordingToTheAlgorithm(
             InvocationAlgorithmRandom()
         )
 
@@ -45,7 +45,7 @@ class LoadBalancer(
 
     private fun updateClusterCapacityLimit() {
         clusterCapacityLimit = 0
-        registry.forEach {
+        registryHealthy.forEach {
             clusterCapacityLimit += it.howManyParallelRequestsCanThisProviderProcess()
         }
     }
@@ -59,15 +59,15 @@ class LoadBalancer(
     }
 
     fun includeProviderIntoBalancer(provider: Provider) {
-        if (registry.size == maximumNumberOfProvidersAcceptedFromTheLoadBalancer) {
+        if (registryHealthy.size == maximumNumberOfProvidersAcceptedFromTheLoadBalancer) {
             throw SorryCannotAddProviderBecauseOfMaxLimit()
         }
 
-        registry.push(provider)
+        registryHealthy.push(provider)
     }
 
     fun excludeProviderFromBalancer(providerIdentifier: ProviderIdentifier) {
-        registry.removeAll {
+        registryHealthy.removeAll {
             it.get().toString() == providerIdentifier.toString()
         }
     }
@@ -79,44 +79,48 @@ class LoadBalancer(
      * this method might be called b y something like cron in a recurring manner
      */
     fun healthCheck() {
-        val (_, deadProviders) = registry.partition {
-            it.check()
-        }
 
-        unregisterAllTheUnhealthyProvidersFromTheLoadbalancer()
+        addUnhealthyProvidersToQuarantineSoTheyCanRecoverThere()
 
-        addAllTheDeadProvidersToTheDeadRegistrySoTheyCanRecoverThere(deadProviders)
+        removeUnhealthyProvidersFromTheLoadbalancer()
 
-        // todo: once alive - add back to the alive register
+        checkQuarantineAndRecoverProvidersIfTheyReportHealthy()
+    }
+
+    private fun checkQuarantineAndRecoverProvidersIfTheyReportHealthy() {
         val toBeDeletedFromDeadRegistry = Stack<Provider>()
 
-        deadRegistry.forEach {
+        quarantine.forEach {
 
             if (it.check()) {
 
                 // the candidate is already there in the list, means this is the second check for it
                 if (candidatesToBeHealthy.search(it) != -1) {
-                    registry.push(it)
+                    registryHealthy.push(it)
                     toBeDeletedFromDeadRegistry.push(it)
                 }
 
-                // adding the candidate to the list for the first time
+                // adding the candidate to the quarantine for the first time
                 candidatesToBeHealthy.push(it)
             }
         }
 
         toBeDeletedFromDeadRegistry.forEach {
-            deadRegistry.remove(it)
+            quarantine.remove(it)
         }
     }
 
-    private fun addAllTheDeadProvidersToTheDeadRegistrySoTheyCanRecoverThere(deadProviders: List<Provider>) {
-        deadProviders.forEach {
-            deadRegistry.push(it)
+    private fun addUnhealthyProvidersToQuarantineSoTheyCanRecoverThere() {
+        val (_, unhealthyProviders) = registryHealthy.partition {
+            it.check()
+        }
+
+        unhealthyProviders.forEach {
+            quarantine.push(it)
         }
     }
 
-    private fun unregisterAllTheUnhealthyProvidersFromTheLoadbalancer() {
-        registry.removeAll { !it.check() }
+    private fun removeUnhealthyProvidersFromTheLoadbalancer() {
+        registryHealthy.removeAll { !it.check() }
     }
 }

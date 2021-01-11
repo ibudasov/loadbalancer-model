@@ -35,7 +35,7 @@ class LoadBalancerTest {
     @Test
     fun `provider can be excluded out of registry manually`() {
 
-        val registry = ProviderRegistry()
+        val registry = ProviderRegistryHealthy()
         val balancer = LoadBalancer(registry)
 
         for (i in 1..5) {
@@ -54,8 +54,8 @@ class LoadBalancerTest {
     @Test
     fun `provider is excluded out of registry if it's not healthy and goes to deadRegistry`() {
 
-        val registry = ProviderRegistry()
-        val deadRegistry = ProviderRegistryOfExcludedProviders()
+        val registry = ProviderRegistryHealthy()
+        val deadRegistry = ProviderRegistryQuarantine()
         val balancer = LoadBalancer(registry, deadRegistry)
 
         val healthyProvider = ProviderExample()
@@ -78,7 +78,7 @@ class LoadBalancerTest {
 
     @Test
     fun `loadBalancer does not accept more requests than it can process`() {
-        val registry = ProviderRegistry()
+        val registry = ProviderRegistryHealthy()
         val balancer = LoadBalancer(registry)
 
         // let's make cluster capacity = 2
@@ -98,8 +98,8 @@ class LoadBalancerTest {
     @Test
     fun `provider is returned to registry, when health check was successful twice`() {
 
-        val registry = ProviderRegistry()
-        val deadRegistry = ProviderRegistryOfExcludedProviders()
+        val registry = ProviderRegistryHealthy()
+        val deadRegistry = ProviderRegistryQuarantine()
 
         val healthyProvider = ProviderExample()
         healthyProvider.setProviderIdentifier("healthy-provider")
@@ -116,7 +116,7 @@ class LoadBalancerTest {
         assertEquals(
             2,
             registry.size,
-            "After running the health check twice in the row, the dead provider, which was reposting healthy, should recover"
+            "After running the health check twice in the row, the dead provider, which was reporting healthy, should recover"
         )
         assertEquals("healthy-provider", registry.first().get().toString())
         assertEquals("dead-provider", registry.last().get().toString())
