@@ -95,5 +95,37 @@ class LoadBalancerTest {
         }
     }
 
+    @Test
+    fun `provider is returned to registry, when health check was successful twice`() {
+
+        val registry = ProviderRegistry()
+        val deadRegistry = ProviderRegistryOfExcludedProviders()
+
+        val healthyProvider = ProviderExample()
+        healthyProvider.setProviderIdentifier("healthy-provider")
+        registry.push(healthyProvider)
+
+        val deadProvider = ProviderExample()
+        deadProvider.setProviderIdentifier("dead-provider")
+        deadRegistry.push(deadProvider)
+
+        val loadBalancer = LoadBalancer(registry, deadRegistry)
+        loadBalancer.healthCheck()
+        loadBalancer.healthCheck()
+
+        assertEquals(
+            2,
+            registry.size,
+            "After running the health check twice in the row, the dead provider, which was reposting healthy, should recover"
+        )
+        assertEquals("healthy-provider", registry.first().get().toString())
+        assertEquals("dead-provider", registry.last().get().toString())
+
+        assertEquals(
+            0,
+            deadRegistry.size,
+            "deadRegistry shall be empty, as the dead provider recovered"
+        )
+    }
 
 }

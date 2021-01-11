@@ -1,11 +1,14 @@
 package domain
 
 import domain.invocationAlgorithm.InvocationAlgorithmRandom
+import java.util.*
 
 class LoadBalancer(
     private val registry: ProviderRegistry = ProviderRegistry(),
     private val deadRegistry: ProviderRegistryOfExcludedProviders = ProviderRegistryOfExcludedProviders(),
 ) {
+
+    private val candidatesToBeHealthy = Stack<Provider>()
 
     /**
      * the maximum number of providers accepted from the load balancer is 10
@@ -76,16 +79,44 @@ class LoadBalancer(
      * this method might be called b y something like cron in a recurring manner
      */
     fun healthCheck() {
-        val (healthyProviders, deadProviders) = registry.partition {
+        val (_, deadProviders) = registry.partition {
             it.check()
         }
 
-        registry.removeAll { !it.check() }
+        unregisterAllTheUnhealthyProvidersFromTheLoadbalancer()
 
+        addAllTheDeadProvidersToTheDeadRegistrySoTheyCanRecoverThere(deadProviders)
+
+        // todo: once alive - add back to the alive register
+        val toBeDeletedFromDeadRegistry = Stack<Provider>()
+
+        deadRegistry.forEach {
+
+            if (it.check()) {
+
+                // the candidate is already there in the list, means this is the second check for it
+                if (candidatesToBeHealthy.search(it) != -1) {
+                    registry.push(it)
+                    toBeDeletedFromDeadRegistry.push(it)
+                }
+
+                // adding the candidate to the list for the first time
+                candidatesToBeHealthy.push(it)
+            }
+        }
+
+        toBeDeletedFromDeadRegistry.forEach {
+            deadRegistry.remove(it)
+        }
+    }
+
+    private fun addAllTheDeadProvidersToTheDeadRegistrySoTheyCanRecoverThere(deadProviders: List<Provider>) {
         deadProviders.forEach {
             deadRegistry.push(it)
         }
+    }
 
-        // todo: once alive - add back to the alive register
+    private fun unregisterAllTheUnhealthyProvidersFromTheLoadbalancer() {
+        registry.removeAll { !it.check() }
     }
 }
