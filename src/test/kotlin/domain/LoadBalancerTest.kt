@@ -2,6 +2,7 @@ package domain
 
 import application.ProviderExample
 import application.ProviderExampleWhichIsAlwaysDead
+import domain.capacityLimit.SorryCannotAcceptRequestDueToClusterCapacityLimit
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

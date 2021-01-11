@@ -1,0 +1,3 @@
+package domain.capacityLimit
+
+class SorryCannotAcceptRequestDueToClusterCapacityLimit : Exception()
