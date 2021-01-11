@@ -1,8 +1,8 @@
 package domain.invocationAlgorithm
 
 import domain.Provider
-import domain.ProviderRegistryHealthy
+import domain.ProviderRegistry
 
 interface InvocationAlgorithm {
-    fun getProviderFromProviderRegistry(providerRegistryHealthy: ProviderRegistryHealthy): Provider
+    fun getProviderFromProviderRegistry(registry: ProviderRegistry): Provider
 }

@@ -8,4 +8,4 @@ import java.util.*
  * Health checker also checks all the guys here, and if they report good health twice -
  * they are back to the registry of healthy providers
  */
-class ProviderRegistryQuarantine : Stack<Provider>()
+class ProviderQuarantine : Stack<Provider>()

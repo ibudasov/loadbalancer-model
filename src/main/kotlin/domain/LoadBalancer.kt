@@ -4,16 +4,15 @@ import domain.invocationAlgorithm.InvocationAlgorithmRandom
 import java.util.*
 
 class LoadBalancer(
-    private val registryHealthy: ProviderRegistryHealthy = ProviderRegistryHealthy(),
-    private val quarantine: ProviderRegistryQuarantine = ProviderRegistryQuarantine(),
+    private val registryHealthy: ProviderRegistry = ProviderRegistry(),
+    private val quarantine: ProviderQuarantine = ProviderQuarantine(),
 ) {
-
-    private val candidatesToBeHealthy = Stack<Provider>()
-
     /**
      * the maximum number of providers accepted from the load balancer is 10
      */
     private val maximumNumberOfProvidersAcceptedFromTheLoadBalancer = 10
+
+    private val candidatesToBeHealthy = Stack<Provider>()
 
     private var clusterCapacityLimit = 0
 
@@ -111,12 +110,8 @@ class LoadBalancer(
     }
 
     private fun addUnhealthyProvidersToQuarantineSoTheyCanRecoverThere() {
-        val (_, unhealthyProviders) = registryHealthy.partition {
-            it.check()
-        }
-
-        unhealthyProviders.forEach {
-            quarantine.push(it)
+        registryHealthy.forEach {
+            if (!it.check()) quarantine.push(it)
         }
     }
 

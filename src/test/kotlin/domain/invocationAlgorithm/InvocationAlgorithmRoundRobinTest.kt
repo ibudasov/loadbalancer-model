@@ -1,7 +1,7 @@
 package domain.invocationAlgorithm
 
 import application.ProviderExample
-import domain.ProviderRegistryHealthy
+import domain.ProviderRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -9,7 +9,7 @@ class InvocationAlgorithmRoundRobinTest {
 
     @Test
     fun `given lets say 5 providers, they will be returned one by one`() {
-        val registry = ProviderRegistryHealthy()
+        val registry = ProviderRegistry()
 
         for (i in 1..5) {
             val `provider$i` = ProviderExample()
@@ -26,7 +26,7 @@ class InvocationAlgorithmRoundRobinTest {
 
     @Test
     fun `given lets say 5 providers, when requested for the 6thh time, then 1st is returned`() {
-        val registry = ProviderRegistryHealthy()
+        val registry = ProviderRegistry()
 
         for (i in 1..5) {
             val `provider$i` = ProviderExample()

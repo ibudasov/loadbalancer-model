@@ -1,7 +1,7 @@
 package domain.invocationAlgorithm
 
 import application.ProviderExample
-import domain.ProviderRegistryHealthy
+import domain.ProviderRegistry
 import org.junit.Assert.assertNotSame
 import org.junit.Test
 
@@ -9,7 +9,7 @@ class InvocationAlgorithmRandomTest {
 
     @Test
     fun `given lets say 5 providers, they will be returned randomly`() {
-        val registry = ProviderRegistryHealthy()
+        val registry = ProviderRegistry()
 
         for (i in 1..5) {
             val `provider$i` = ProviderExample()

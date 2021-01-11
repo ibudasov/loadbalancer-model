@@ -35,7 +35,7 @@ class LoadBalancerTest {
     @Test
     fun `provider can be excluded out of registry manually`() {
 
-        val registry = ProviderRegistryHealthy()
+        val registry = ProviderRegistry()
         val balancer = LoadBalancer(registry)
 
         for (i in 1..5) {
@@ -52,19 +52,19 @@ class LoadBalancerTest {
     }
 
     @Test
-    fun `provider is excluded out of registry if it's not healthy and goes to deadRegistry`() {
+    fun `provider is excluded out of registry if it's not healthy and goes to quarantine`() {
 
-        val registry = ProviderRegistryHealthy()
-        val deadRegistry = ProviderRegistryQuarantine()
-        val balancer = LoadBalancer(registry, deadRegistry)
+        val registry = ProviderRegistry()
+        val quarantine = ProviderQuarantine()
+        val balancer = LoadBalancer(registry, quarantine)
 
         val healthyProvider = ProviderExample()
         healthyProvider.setProviderIdentifier("healthy-provider")
         balancer.includeProviderIntoBalancer(healthyProvider)
 
-        val deadProvider = ProviderExampleWhichIsAlwaysDead()
-        deadProvider.setProviderIdentifier("dead-provider")
-        balancer.includeProviderIntoBalancer(deadProvider)
+        val unhealthyProvider = ProviderExampleWhichIsAlwaysDead()
+        unhealthyProvider.setProviderIdentifier("sick-provider")
+        balancer.includeProviderIntoBalancer(unhealthyProvider)
 
         assertEquals(2, registry.size, "Initially the loadBalancer should have 2 providers")
 
@@ -72,13 +72,13 @@ class LoadBalancerTest {
 
         assertEquals(1, registry.size, "After running the health check, the dead provider should be gone")
         assertEquals("healthy-provider", balancer.get().get().toString())
-        assertEquals(1, deadRegistry.size)
-        assertEquals("dead-provider", deadRegistry.first().get().uniqueString)
+        assertEquals(1, quarantine.size)
+        assertEquals("sick-provider", quarantine.first().get().uniqueString)
     }
 
     @Test
     fun `loadBalancer does not accept more requests than it can process`() {
-        val registry = ProviderRegistryHealthy()
+        val registry = ProviderRegistry()
         val balancer = LoadBalancer(registry)
 
         // let's make cluster capacity = 2
@@ -98,18 +98,18 @@ class LoadBalancerTest {
     @Test
     fun `provider is returned to registry, when health check was successful twice`() {
 
-        val registry = ProviderRegistryHealthy()
-        val deadRegistry = ProviderRegistryQuarantine()
+        val registry = ProviderRegistry()
+        val quarantine = ProviderQuarantine()
 
         val healthyProvider = ProviderExample()
         healthyProvider.setProviderIdentifier("healthy-provider")
         registry.push(healthyProvider)
 
-        val deadProvider = ProviderExample()
-        deadProvider.setProviderIdentifier("dead-provider")
-        deadRegistry.push(deadProvider)
+        val sickProvider = ProviderExample()
+        sickProvider.setProviderIdentifier("sick-provider")
+        quarantine.push(sickProvider)
 
-        val loadBalancer = LoadBalancer(registry, deadRegistry)
+        val loadBalancer = LoadBalancer(registry, quarantine)
         loadBalancer.healthCheck()
         loadBalancer.healthCheck()
 
@@ -119,12 +119,12 @@ class LoadBalancerTest {
             "After running the health check twice in the row, the dead provider, which was reporting healthy, should recover"
         )
         assertEquals("healthy-provider", registry.first().get().toString())
-        assertEquals("dead-provider", registry.last().get().toString())
+        assertEquals("sick-provider", registry.last().get().toString())
 
         assertEquals(
             0,
-            deadRegistry.size,
-            "deadRegistry shall be empty, as the dead provider recovered"
+            quarantine.size,
+            "quarantine shall be empty, as the dead provider recovered"
         )
     }
 
