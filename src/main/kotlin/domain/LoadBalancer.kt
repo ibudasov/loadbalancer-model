@@ -7,13 +7,12 @@ class LoadBalancer(
     private val registry: ProviderRegistry = ProviderRegistry(),
     private val quarantine: ProviderQuarantine = ProviderQuarantine(),
     private val healthChecker: HealthChecker = HealthChecker(),
-    private val capacityLimiter: CapacityLimiter = CapacityLimiter(),
+    private val capacityLimiter: CapacityLimiter,
 ) {
     /**
      * the maximum number of providers accepted from the load balancer is 10
      */
     private val maximumNumberOfProvidersAcceptedFromTheLoadBalancer = 10
-
 
     fun get(): Provider {
 
@@ -23,8 +22,7 @@ class LoadBalancer(
             InvocationAlgorithmRandom()
         )
 
-        // todo: get rid of this
-        // capacityLimiter.unregisterIncomingRequestAsItIsProcessed()
+        capacityLimiter.unregisterIncomingRequestAsItIsProcessed()
 
         return provider
     }

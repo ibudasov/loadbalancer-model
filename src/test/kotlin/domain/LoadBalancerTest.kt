@@ -3,6 +3,8 @@ package domain
 import application.ProviderExample
 import application.ProviderExampleWhichIsAlwaysDead
 import domain.capacityLimit.SorryCannotAcceptRequestDueToClusterCapacityLimit
+import infrastructure.CapacityLimiterInMemory
+import infrastructure.CapacityLimiterWhicDoesNotUnregister
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -12,7 +14,8 @@ class LoadBalancerTest {
     @Test
     fun `provider can be included into the balancer when there is enough space for it`() {
 
-        val balancer = LoadBalancer()
+        val balancer =
+            LoadBalancer(ProviderRegistry(), ProviderQuarantine(), HealthChecker(), CapacityLimiterInMemory())
         val provider = ProviderExample()
 
         balancer.includeProviderIntoBalancer(provider)
@@ -21,7 +24,8 @@ class LoadBalancerTest {
     @Test
     fun `provider can NOT be included into the balancer when there is enough providers already`() {
 
-        val balancer = LoadBalancer()
+        val balancer =
+            LoadBalancer(ProviderRegistry(), ProviderQuarantine(), HealthChecker(), CapacityLimiterInMemory())
         val provider = ProviderExample()
 
         for (i in 1..10) {
@@ -37,7 +41,7 @@ class LoadBalancerTest {
     fun `provider can be excluded out of registry manually`() {
 
         val registry = ProviderRegistry()
-        val balancer = LoadBalancer(registry)
+        val balancer = LoadBalancer(registry, ProviderQuarantine(), HealthChecker(), CapacityLimiterInMemory())
 
         for (i in 1..5) {
             val `provider$i` = ProviderExample()
@@ -57,7 +61,7 @@ class LoadBalancerTest {
 
         val registry = ProviderRegistry()
         val quarantine = ProviderQuarantine()
-        val balancer = LoadBalancer(registry, quarantine)
+        val balancer = LoadBalancer(registry, quarantine, HealthChecker(), CapacityLimiterInMemory())
 
         val healthyProvider = ProviderExample()
         healthyProvider.setProviderIdentifier("healthy-provider")
@@ -80,7 +84,8 @@ class LoadBalancerTest {
     @Test
     fun `loadBalancer does not accept more requests than it can process`() {
         val registry = ProviderRegistry()
-        val balancer = LoadBalancer(registry)
+        val capacityLimiter = CapacityLimiterWhicDoesNotUnregister()
+        val balancer = LoadBalancer(registry, ProviderQuarantine(), HealthChecker(), capacityLimiter)
 
         // let's make cluster capacity = 2
         for (i in 1..2) {
@@ -110,7 +115,7 @@ class LoadBalancerTest {
         sickProvider.setProviderIdentifier("sick-provider")
         quarantine.push(sickProvider)
 
-        val loadBalancer = LoadBalancer(registry, quarantine)
+        val loadBalancer = LoadBalancer(registry, quarantine, HealthChecker(), CapacityLimiterInMemory())
         loadBalancer.healthCheck()
         loadBalancer.healthCheck()
 
